@@ -1,0 +1,178 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="header">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <a class="navbar-brand text-orange font-weight-bold" th:href="@{/}">당근마켓</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto align-items-center">
+                    <!-- 로그인 버튼 -->
+                    <li class="nav-item" th:if="${session.loggedInUser == null}">
+                        <button type="button" class="btn btn-outline-orange" data-toggle="modal"
+                                data-target="#loginModal">로그인
+                        </button>
+                    </li>
+                    <!-- 로그인된 사용자 정보 -->
+                    <li class="nav-item d-flex align-items-center" th:if="${session.loggedInUser != null}">
+                        <a th:href="@{/edit-profile}"
+                           class="nav-link d-flex align-items-center text-decoration-none mr-3" data-bs-toggle="tooltip"
+                           title="마이페이지">
+                            <img th:if="${session.loggedInUser.profileImage != null}"
+                                 th:src="${session.loggedInUser.profileImage}"
+                                 alt="Profile Image" class="rounded-circle mr-2"
+                                 style="width: 30px; height: 30px;">
+                            <span class="ml-1 font-weight-bold"
+                                  th:text="${session.loggedInUser.username + ' 님 마이페이지'}"></span>
+                        </a>
+                        <!-- 위치 정보 표시 -->
+                        <!-- 위치 정보 표시 -->
+                        <div class="d-flex align-items-center ml-2">
+                            <i class="fas fa-map-marker-alt text-danger mr-1"></i> <!-- 위치 아이콘 -->
+                            <span class="text-muted" th:text="${session.loggedInUser.location}"></span>
+                        </div>
+
+                        <a th:href="@{/logout}" class="btn btn-orange ml-3">로그아웃</a>
+
+                        <th:block th:if="${session.loggedInUser.userGroup == 'GENERAL'}">
+                        <a th:href="@{/chatroom}" class="nav-link d-flex align-items-center ml-3">
+                            <i class="fas fa-comments chat-icon"></i>
+                            <span class="ml-1 font-weight-bold">채팅방</span>
+                        </a>
+                        </th:block>
+                        <th:block th:if="${session.loggedInUser.userGroup == 'ADMIN'}">
+                        <a th:href="@{/admin/reports}" class="nav-link d-flex align-items-center ml-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
+                                <path d="M8.982 1.566a1.5 1.5 0 0 0-2.664 0l-6.857 11.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.29-2.434l-6.857-11.5zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                            </svg>
+                            <span class="ml-1 font-weight-bold">신고내역</span>
+                        </a>
+                        </th:block>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
+    <!-- 로그인 모달 -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #ff8a3d;">
+                    <h5 class="modal-title" id="loginModalLabel" style="color: white;">로그인</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm" action="/login" method="post">
+                        <div class="form-group">
+                            <label for="loginEmail">이메일</label>
+                            <input type="email" class="form-control" id="loginEmail" name="email" placeholder="이메일 입력"
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">비밀번호</label>
+                            <input type="password" class="form-control" id="loginPassword" name="password"
+                                   placeholder="비밀번호 입력" required>
+                        </div>
+                        <input type="hidden" id="loginLatitude" name="latitude">
+                        <input type="hidden" id="loginLongitude" name="longitude">
+                        <input type="hidden" id="loginLocation" name="location">
+                        <button type="submit" class="btn btn-orange btn-block"
+                                onclick="event.preventDefault(); getLocationAndSubmit();">로그인
+                        </button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <span>아직 회원이 아니신가요?</span>
+                    <a href="/register" class="ml-2">회원가입</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // 로그인 시 위치 정보 수집
+        function getLocationAndSubmit() {
+            console.log("getLocationAndSubmit 호출됨");
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+
+                    // 위도와 경도를 숨겨진 필드에 설정
+                    document.getElementById('loginLatitude').value = latitude;
+                    document.getElementById('loginLongitude').value = longitude;
+
+                    // 위치 정보를 주소로 변환 후 폼 제출
+                    convertLatLngToAddress(latitude, longitude, (address) => {
+                        document.getElementById('loginLocation').value = address;
+                        document.getElementById('loginForm').submit();
+                    });
+                }, () => {
+                    alert("위치 정보를 가져오는 데 실패했습니다.");
+                });
+            } else {
+                alert("브라우저가 위치 정보를 지원하지 않습니다.");
+            }
+        }
+
+        // 위도와 경도를 주소로 변환하는 함수
+        function convertLatLngToAddress(latitude, longitude, callback) {
+            const url = `/get-address?latitude=${latitude}&longitude=${longitude}`;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok: " + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === "OK" && data.results[0]) {
+                        let address = data.results[0].formatted_address;
+                        // "대한민국" 문자열 제거
+                        address = address.replace("대한민국 ", ""); // "대한민국"과 그 뒤 공백을 제거
+                        console.log("Converted Address: ", address);  // 주소 출력
+                        callback(address);  // 콜백으로 주소 전달
+                    } else {
+                        console.error("Geocoding API Error: ", data);
+                        alert("주소 변환에 실패했습니다.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching address: ", error);
+                    alert("주소를 가져오는 중 오류가 발생했습니다.");
+                });
+        }
+
+        //로그인 체크(이메일 비번이 다른 경우 다시 로그인창으로 리다이렉트
+        document.body.onload = checkLoginError;
+
+        function checkLoginError() {
+            const urlParams = new URLSearchParams(window.location.search);
+            // 로그인 실패 처리
+            if (urlParams.has('loginError')) {
+                alert('이메일 또는 비밀번호가 잘못되었습니다.');
+                $('#loginModal').modal('show'); // 로그인 모달 다시 표시
+                document.getElementById('password').value = ''; // 비밀번호 필드 지우기
+            }
+
+            // 정지된 계정 처리
+            if (urlParams.has('accountLocked')) {
+                alert('정지된 계정입니다. 관리자에게 문의하세요.');
+                $('#loginModal').modal('show'); // 로그인 모달 다시 표시
+                document.getElementById('password').value = ''; // 비밀번호 필드 지우기
+            }
+        }
+
+        window.getLocationAndSubmit = getLocationAndSubmit;
+        window.convertLatLngToAddress = convertLatLngToAddress;
+    </script>
+
+</div>

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+  <title>Chat Room</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #F8F9FA;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .chat-container {
+      max-width: 768px;
+      margin: 2rem auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #e9ecef;
+      background-color: #FF7E36;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chat-header select {
+      background-color: white;
+      border: 1px solid #e9ecef;
+      border-radius: 5px;
+      padding: 5px 10px;
+      color: #495057;
+      font-size: 0.9rem;
+    }
+
+    .chat-header img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    #chat {
+      height: 500px;
+      padding: 1.5rem;
+      overflow-y: auto;
+      background-color: #f8f9fa;
+    }
+
+    .chat-input-container {
+      padding: 1rem;
+      background: white;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: border-color 0.15s ease-in-out;
+    }
+
+    .chat-input:focus {
+      outline: none;
+      border-color: #FF7E36;
+    }
+
+    .send-button {
+      background-color: #FF7E36;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.15s ease-in-out;
+    }
+
+    .send-button:hover {
+      background-color: #FF6B1A;
+    }
+
+    /* 메시지 스타일 */
+    .message-container {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+    }
+
+    /* 보낸 메시지 정렬 */
+    .message-container.sent {
+      justify-content: flex-end;
+    }
+
+    /* 받은 메시지 정렬 */
+    .message-container.received {
+      justify-content: flex-start;
+    }
+
+    /* 메시지 블록 스타일 */
+    .message {
+      max-width: 70%;
+      background-color: #f1f1f1;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+
+    /* 보낸 메시지의 배경 색상 */
+    .message-container.sent .message {
+      background-color: #ffa07a;
+    }
+
+    /* 타임스탬프 스타일 */
+    .message-timestamp {
+      font-size: 0.85rem;
+      color: #888888;
+      white-space: nowrap; /* 시간이 줄바꿈되지 않도록 */
+      margin: 0 10px; /* 메시지와 시간 사이 간격 */
+    }
+
+    /* 보낸 메시지의 타임스탬프 왼쪽 */
+    .message-container.sent .message-timestamp {
+      order: -1; /* 타임스탬프를 메시지 왼쪽으로 */
+      margin-right: 10px;
+      margin-left: 0;
+    }
+
+    /* 받은 메시지의 타임스탬프 오른쪽 */
+    .message-container.received .message-timestamp {
+      margin-left: 10px;
+      margin-right: 0;
+    }
+    .chat-header a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 5px 10px;
+      border: 1px solid white; /* 테두리 추가 */
+      border-radius: 5px; /* 모서리 둥글게 */
+      transition: background-color 0.3s ease, color 0.3s ease; /* 호버 애니메이션 */
+    }
+
+    .chat-header a:hover {
+      background-color: white; /* 배경색 흰색 */
+      color: #FF7E36; /* 텍스트 색 변경 */
+    }
+
+  </style>
+</head>
+<body>
+<!-- Body Fragment -->
+<th:block layout:fragment="content">
+  <div class="chat-container">
+    <!-- 로그인한 사용자 정보를 위한 섹션 추가 -->
+    <div class="my-info" style="display: none;">
+      <span class="username" th:text="${loggedInUser.username}"></span>
+    </div>
+    <div class="chat-header">
+      <img th:src="${loggedInUser.id == chatRoom.seller.id ? chatRoom.buyer.profileImage : chatRoom.seller.profileImage}" alt="상대방 프로필 사진" />
+      <h3 th:text="${loggedInUser.id == chatRoom.buyer.id ? chatRoom.seller.username + '님과 채팅방' : chatRoom.buyer.username + '님과 채팅방'}">채팅방</h3>
+      <a th:href="@{'/products/detail/' + ${chatRoom.product.id}}" class="product-link">상품 게시글 확인</a>
+
+
+      <!-- 예약 상태 변경 드롭다운 - 판매자만 볼 수 있음 -->
+      <select
+              id="reservation-status"
+              class="form-select"
+              style="width: 150px; font-size: 0.9rem;"
+              onchange="updateReservationStatus()"
+              th:if="${loggedInUser.id == chatRoom.seller.id}">  <!-- 판매자 체크 추가 -->
+        <option value="AVAILABLE" th:selected="${chatRoom.product.status == 'SALE'}">예약 가능</option>
+        <option value="RESERVED" th:selected="${chatRoom.product.status == 'RESERVED'}">예약됨</option>
+        <option value="SOLD" th:selected="${chatRoom.product.status == 'SOLD'}">판매 완료</option>
+      </select>
+    </div>
+
+    <div id="chat"></div>
+    <div class="chat-input-container">
+      <input type="text" class="chat-input" id="message" placeholder="메시지를 입력하세요..." />
+      <button class="send-button" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+</th:block>
+<!-- 페이지별 JavaScript -->
+<th:block layout:fragment="pageScript">
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-analytics.js";
+    import { getDatabase, ref, push, set, onChildAdded } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+    // Firebase 초기화 코드 (Firebase 콘솔에서 복사한 구성 정보 사용)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDyyP59m-lGwQBRIcQ6lDpN8qtos3bcgZ0",
+      authDomain: "carrotmarket1-90424.firebaseapp.com",
+      databaseURL: "https://carrotmarket1-90424-default-rtdb.firebaseio.com",
+      projectId: "carrotmarket1-90424",
+      storageBucket: "carrotmarket1-90424.firebasestorage.app",
+      messagingSenderId: "372573825138",
+      appId: "1:372573825138:web:2a0f88e3dfeead7343baeb",
+      measurementId: "G-T5PMZ4YJWK"
+    };
+
+    // Firebase 초기화
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const database = getDatabase(app);
+
+    // URL에서 채팅룸 ID 가져오기
+    const chatRoomId = window.location.pathname.split("/").pop();
+
+    // Firebase Database의 특정 채팅룸 경로 설정
+    const chatRef = ref(database, 'chatrooms/' + chatRoomId + '/messages');
+
+    // 메시지 수신 (새로운 메시지가 추가될 때마다)
+    onChildAdded(chatRef, (snapshot) => {
+      const messageData = snapshot.val();
+      const usernameElement = document.querySelector('.my-info .username');
+      if (usernameElement) {
+        const currentUsername = usernameElement.textContent;
+        const isCurrentUser = messageData.sender === currentUsername;
+        // 메시지와 타임스탬프를 전달
+        displayMessage(messageData.sender, messageData.content, isCurrentUser,messageData.timestamp);
+      }
+    });
+
+    // 메시지 입력 필드에 엔터 키 이벤트 리스너 추가
+    const messageInput = document.getElementById('message');
+
+    // Enter 키가 눌렸을 때 sendMessage 함수 호출
+    messageInput.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter' && !event.isComposing) {
+        event.preventDefault(); // 기본 Enter 키 동작 방지 (ex: 줄바꿈)
+        sendMessage();
+      }
+    });
+
+    // 메시지 전송 함수 (window 객체에 추가)
+    window.sendMessage = function () {
+      const usernameElement = document.querySelector('.my-info .username');
+
+      if (usernameElement) {
+        const username = usernameElement.textContent;
+        const message = document.getElementById('message').value;
+
+        if (message === '') {
+          alert('메시지를 입력해주세요.');
+          return;
+        }
+// Firebase에 메시지 저장
+        const newMessageRef = push(chatRef);
+        set(newMessageRef, {
+          sender: username,
+          content: message,
+          timestamp: Date.now() // 현재 시간을 밀리초 단위로 저장
+        });
+
+        document.getElementById('message').value = ''; // 메시지 입력창 초기화
+      } else {
+        console.error('로그인한 사용자 정보를 찾을 수 없습니다.');
+      }
+    }
+
+    // 화면에 메시지 표시 함수
+    function displayMessage(sender, content, isCurrentUser, timestamp) {
+      const chat = document.getElementById('chat');
+
+      // 메시지 전체 컨테이너
+      const messageContainer = document.createElement('div');
+      messageContainer.classList.add('message-container', isCurrentUser ? 'sent' : 'received');
+
+      // 타임스탬프
+      let formattedTime = '';
+      if (timestamp) {
+        const date = new Date(timestamp);
+        formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // HH:MM 형식
+      } else {
+        formattedTime = '알 수 없음';
+      }
+
+      const timestampElement = document.createElement('div');
+      timestampElement.classList.add('message-timestamp');
+      timestampElement.textContent = formattedTime;
+
+      // 메시지 블록
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('message');
+      messageElement.textContent = content;
+
+      // 메시지와 타임스탬프를 메시지 컨테이너에 추가
+      if (isCurrentUser) {
+        // 보낸 메시지는 시간 왼쪽
+        messageContainer.appendChild(timestampElement);
+        messageContainer.appendChild(messageElement);
+      } else {
+        // 받은 메시지는 시간 오른쪽
+        messageContainer.appendChild(messageElement);
+        messageContainer.appendChild(timestampElement);
+      }
+
+      chat.appendChild(messageContainer);
+
+      // 스크롤을 맨 아래로
+      chat.scrollTop = chat.scrollHeight;
+    }
+    //상품 거래 상태 변경 처리
+    window.updateReservationStatus = function () {
+      const status = document.getElementById('reservation-status').value;
+
+      // 서버로 상태 변경 요청
+      fetch('/update-reservation-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: status, chatRoomId: chatRoomId }),
+      })
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error('Network response was not ok');
+                }
+                return response.json();
+              })
+              .then(data => {
+                if (data.success) {
+                  alert('예약 상태가 업데이트되었습니다.');
+                } else {
+                  alert('상태 변경에 실패했습니다.');
+                }
+              })
+              .catch(error => {
+                console.error('Error:', error);
+                alert('상태 변경 중 오류가 발생했습니다.');
+              });
+    };
+  </script>
+</th:block>
+</body>
+</html>

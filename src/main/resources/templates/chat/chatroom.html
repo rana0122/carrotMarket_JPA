@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+  <meta charset="UTF-8">
+  <title>채팅방 목록</title>
+  <style>
+    body {
+      background-color: #F8F9FA;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    .header {
+      padding: 16px 0;
+      border-bottom: 1px solid #e9ecef;
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-size: 24px;
+      font-weight: bold;
+      color: #212529;
+      margin: 0;
+    }
+    .tab-container {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+    .tab-button {
+      padding: 8px 16px;
+      border: none;
+      background-color: #f8f9fa;
+      cursor: pointer;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #868e96;
+      transition: all 0.2s ease;
+    }
+    .tab-button:hover {
+      background-color: #f1f3f5;
+    }
+    .tab-button.active {
+      background-color: #ff6f0f;
+      color: white;
+    }
+    .chatroom-list {
+      width: 100%;
+    }
+    .no-image, .chatroom-item img {
+      width: 80px; /* 이미지를 더 크게 */
+      height: 80px;
+      object-fit: cover; /* 이미지를 영역에 맞게 채움 */
+      border-radius: 8px; /* 둥근 테두리 */
+      margin-right: 16px; /* 이미지와 텍스트 간격 */
+    }
+    .chatroom-item {
+      padding: 20px; /* 아이템 전체 패딩 추가 */
+      display: flex;
+      align-items: center;
+      background-color: white;
+      margin-bottom: 16px; /* 아이템 간 간격 추가 */
+      border: 1px solid #eaecef;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+    }
+    .chatroom-item:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 호버 시 그림자 효과 */
+      transform: translateY(-2px);
+    }
+
+    .chatroom-info {
+      flex: 1; /* 남은 공간을 채우도록 설정 */
+    }
+
+    .product-title {
+      font-size: 18px; /* 제목 크기 조정 */
+      font-weight: bold;
+      margin-bottom: 8px; /* 제목과 메타 정보 간 간격 추가 */
+      color: #212529;
+    }
+
+    .chatroom-meta {
+      color: #868e96;
+      margin: 6px 0; /* 메타 정보 간 간격 추가 */
+      font-size: 14px; /* 글씨 크기 살짝 키움 */
+    }
+
+    .btn-enter {
+      background-color: #ff6f0f;
+      color: white;
+      padding: 10px 20px; /* 버튼 크기 증가 */
+      text-decoration: none;
+      border-radius: 8px; /* 둥근 버튼 */
+      font-size: 14px;
+      font-weight: 600;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn-enter:hover {
+      background-color: #f06000;
+    }
+    .empty-message {
+      text-align: center;
+      padding: 48px 0;
+      color: #868e96;
+      font-size: 14px;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<!-- Body Fragment -->
+<th:block layout:fragment="content">
+<div class="header">
+  <div class="container">
+    <h2>채팅방 목록</h2>
+  </div>
+</div>
+
+<div class="container">
+  <div class="tab-container">
+    <button class="tab-button active" onclick="showTab('all')">전체 채팅방</button>
+    <button class="tab-button" onclick="showTab('buy')">구매 채팅방</button>
+    <button class="tab-button" onclick="showTab('sell')">판매 채팅방</button>
+  </div>
+
+  <!-- 전체 채팅방 -->
+  <div id="all" class="tab-content active">
+    <div class="chatroom-list" th:if="${not #lists.isEmpty(chatRooms)}">
+      <div class="chatroom-item" th:each="chatRoom : ${chatRooms}">
+        <div class="no-image">
+          <div th:if="${not #lists.isEmpty(chatRoom.product.images)}">
+            <img th:src="${chatRoom.product.images[0]?.imageUrl}" alt="상품 이미지" />
+          </div>
+          <div th:if="${#lists.isEmpty(chatRoom.product.images)}">
+            <span>이미지가 없습니다</span>
+          </div>
+        </div>
+        <div class="chatroom-info">
+          <div class="product-title" th:text="${chatRoom.product?.title ?: '삭제된 상품'}">
+            상품명
+          </div>
+          <div class="chatroom-meta">
+            판매자: <span th:text="${chatRoom.seller?.username ?: '알 수 없음'}"></span>
+            <span class="mx-2">•</span> 구매자: <span th:text="${chatRoom.buyer?.username ?: '알 수 없음'}"></span>
+          </div>
+          <div class="chatroom-meta">
+            <span th:text="${#dates.format(chatRoom.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+          </div>
+        </div>
+        <a class="btn-enter" th:href="@{'/chatroom/' + ${chatRoom.id}}">채팅하기</a>
+      </div>
+    </div>
+    <div class="empty-message" th:if="${#lists.isEmpty(chatRooms)}">
+      채팅방이 없습니다.
+    </div>
+  </div>
+
+  <!-- 구매 채팅방 -->
+  <div id="buy" class="tab-content">
+    <div class="chatroom-list" th:if="${not #lists.isEmpty(chatRooms)}">
+      <div class="chatroom-item" th:each="chatRoom : ${chatRooms}"
+           th:if="${chatRoom.buyerId == session.loggedInUser.id}">
+        <div class="no-image">
+          <div th:if="${not #lists.isEmpty(chatRoom.product.images)}">
+            <img th:src="${chatRoom.product.images[0]?.imageUrl}" alt="상품 이미지" />
+          </div>
+          <div th:if="${#lists.isEmpty(chatRoom.product.images)}">
+            <span>이미지가 없습니다</span>
+          </div>        </div>
+        <div class="chatroom-info">
+          <div class="product-title" th:text="${chatRoom.product?.title ?: '삭제된 상품'}">
+            상품명
+          </div>
+          <div class="chatroom-meta">
+            판매자: <span th:text="${chatRoom.seller?.username ?: '알 수 없음'}"></span>
+            <span class="mx-2">•</span> 구매자: <span th:text="${chatRoom.buyer?.username ?: '알 수 없음'}"></span>
+          </div>
+          <div class="chatroom-meta">
+            <span th:text="${#dates.format(chatRoom.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+          </div>
+        </div>
+        <a class="btn-enter" th:href="@{'/chatroom/' + ${chatRoom.id}}">채팅하기</a>
+      </div>
+    </div>
+    <div class="empty-message" th:if="${#lists.isEmpty(chatRooms)}">
+      구매 채팅방이 없습니다.
+    </div>
+  </div>
+
+  <!-- 판매 채팅방 -->
+  <div id="sell" class="tab-content">
+    <div class="chatroom-list" th:if="${not #lists.isEmpty(chatRooms)}">
+      <div class="chatroom-item" th:each="chatRoom : ${chatRooms}"
+           th:if="${chatRoom.sellerId == session.loggedInUser.id}">
+        <div class="no-image">
+          <div th:if="${not #lists.isEmpty(chatRoom.product.images)}">
+            <img th:src="${chatRoom.product.images[0]?.imageUrl}" alt="상품 이미지" />
+          </div>
+          <div th:if="${#lists.isEmpty(chatRoom.product.images)}">
+            <span>이미지가 없습니다</span>
+          </div>        </div>
+        <div class="chatroom-info">
+          <div class="product-title" th:text="${chatRoom.product?.title ?: '삭제된 상품'}">
+            상품명
+          </div>
+          <div class="chatroom-meta">
+            판매자: <span th:text="${chatRoom.seller?.username ?: '알 수 없음'}"></span>
+            <span class="mx-2">•</span> 구매자: <span th:text="${chatRoom.buyer?.username ?: '알 수 없음'}"></span>
+          </div>
+          <div class="chatroom-meta">
+            <span th:text="${#dates.format(chatRoom.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+          </div>
+        </div>
+        <a class="btn-enter" th:href="@{'/chatroom/' + ${chatRoom.id}}">채팅하기</a>
+      </div>
+    </div>
+    <div class="empty-message" th:if="${#lists.isEmpty(chatRooms)}">
+      판매 채팅방이 없습니다.
+    </div>
+  </div>
+</div>
+</th:block>
+
+<!-- 페이지별 JavaScript -->
+<th:block layout:fragment="pageScript">
+<script>
+  function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.classList.remove('active');
+    });
+    document.getElementById(tabId).classList.add('active');
+    document.querySelector(`button[onclick="showTab('${tabId}')"]`).classList.add('active');
+  }
+</script>
+  </th:block>
+</body>
+</html>

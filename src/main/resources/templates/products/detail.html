@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상품 상세</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.2/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .product-detail-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px;
+            align-items: flex-start; /* 상단 정렬 */
+        }
+
+        .product-detail {
+            display: flex;
+            align-items: flex-start;
+            gap: 3rem;
+            flex: 1; /* 우측 상세 정보가 남은 공간을 차지 */
+        }
+        .btn-orange.btn-sm {
+            padding: 5px 10px; /* 버튼 내부 여백 */
+            font-size: 14px; /* 작은 폰트 크기 */
+        }
+
+        /*.product-image {*/
+        /*    flex: 1;*/
+        /*    max-width: 600px;*/
+        /*    width: 100%;*/
+        /*    aspect-ratio: 1;*/
+        /*    border: 1px solid #ddd;*/
+        /*    background: #f8f9fa;*/
+        /*}*/
+
+        .product-image {
+            flex: 2; /* 이미지 영역의 비율을 늘림 */
+            max-width: 700px; /* 최대 너비를 키움 */
+            width: 100%;
+            aspect-ratio: 1;
+            border: 1px solid #ddd;
+            background: #f8f9fa;
+        }
+
+        #productCarousel {
+            width: 100%;
+            height: 100%;
+        }
+
+        .carousel-inner, .carousel-item {
+            width: 100%;
+            height: 100%;
+        }
+
+        .carousel-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 1rem;
+        }
+
+        .carousel-control-prev,
+        .carousel-control-next {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            margin: 0 1rem;
+        }
+
+        .carousel-control-prev-icon,
+        .carousel-control-next-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .product-info {
+            flex: 1.5;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .title {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .price {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ff8a3d;
+        }
+
+        .description {
+            font-size: 20px;
+            line-height: 1.8;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .location, .seller {
+            color: #666;
+            margin: 10px 0;
+        }
+
+        .btn-chat {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #ff8a3d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-top: 20px;
+        }
+
+        .btn-chat:hover {
+            background-color: #ff7021;
+        }
+
+        .btn-orange {
+            background-color: #ff8a3d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+        }
+
+        .btn-orange:hover {
+            background-color: #e6762d;
+        }
+
+        .edit-button-container {
+            margin-top: 20px;
+            text-align: start;
+        }
+
+        @media (max-width: 768px) {
+            .product-detail {
+                flex-direction: column;
+            }
+
+            .product-image {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .product-info {
+                width: 100%;
+            }
+        }
+        .side-buttons {
+            width: 100px; /* 좌측 버튼 섹션 너비를 줄임 */
+        }
+
+        .category-item {
+            display: block;
+            padding: 12px 16px;
+            color: #212529;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-size: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .category-item:hover {
+            background-color: rgba(255, 138, 61, 0.2); /* 주황색, 투명도 80% */
+            color: #fd6e00; /* 텍스트를 흰색으로 */
+            font-weight: bold; /* 텍스트 굵게 */
+        }
+        .d-flex .btn-chat,
+        .d-flex .btn-orange {
+            display: inline-block;
+            height: 40px; /* 버튼 높이를 통일 */
+            line-height: 40px; /* 버튼 안 텍스트 가운데 정렬 */
+            text-align: center;
+            padding: 0 20px; /* 버튼 내부 좌우 여백 */
+            margin: 0; /* 추가 여백 제거 */
+        }
+        .col-md-3 {
+            margin-left: -3cm; /* 왼쪽으로 3cm 이동 */
+        }
+
+
+    </style>
+</head>
+<body>
+<!-- Body Fragment -->
+<th:block layout:fragment="content">
+        <div class="container mt-5">
+            <div class="d-flex">
+                <!-- 좌측 카테고리 섹션 -->
+                <th:block th:if="${session.loggedInUser != null}">
+                    <!-- 카테고리 버튼 -->
+                    <div class="col-md-3">
+                        <h5 class="mb-3">메뉴</h5>
+                        <hr/>
+                        <div class="category-list">
+                            <!-- 목록으로 돌아가기 -->
+                                <a th:href="@{/}" class="category-item">
+                                    <i class="bi bi-house-door-fill me-2" style="color: #ff8a3d;"></i> 목록으로 돌아가기
+                                </a>
+                                <!-- 판매한 물품 -->
+                                <a th:href="@{/myproduct/sell/{userId}(userId=${session.loggedInUser.id})}" class="category-item">
+                                    <i class="bi bi-basket-fill me-2" style="color: #ff8a3d;"></i> 판매한 물품
+                                </a>
+                                <!-- 구매한 물품 -->
+                                <a th:href="@{/myproduct/buy/{userId}(userId=${session.loggedInUser.id})}" class="category-item">
+                                    <i class="bi bi-cart-check-fill me-2" style="color: #ff8a3d;"></i> 구매한 물품
+                                </a>
+                        </div>
+                    </div>
+                </th:block>
+
+
+
+                <div class="product-detail flex-grow-1">
+                <div class="product-image">
+                    <div id="productCarousel" class="carousel slide">
+                        <div class="carousel-inner">
+                            <div class="carousel-item" th:each="image, stat : ${product.images}"
+                                 th:classappend="${stat.first} ? 'active' : ''">
+                                <img th:src="${image.imageUrl}" class="d-block w-100" alt="상품 이미지">
+                            </div>
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel"
+                                data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#productCarousel"
+                                data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="product-info">
+                    <h1 class="title" id="상품명" th:text="${product.title}">상품명</h1>
+
+                    <div class="price" th:text="'₩ ' + ${product.price}">
+                        가격
+                    </div>
+                    <div class="status mt-3 mb-3">
+                        <span class="fs-5">상태: </span>
+                        <span th:switch="${product.status}">
+            <span th:case="'SALE'" class="badge bg-success fs-6 px-3 py-2">판매중</span>
+            <span th:case="'RESERVED'" class="badge bg-warning text-dark fs-6 px-3 py-2">예약중</span>
+            <span th:case="'SOLD'" class="badge bg-secondary fs-6 px-3 py-2">판매완료</span>
+        </span>
+                    </div>
+                    <div class="description" th:text="${product.description}" style="white-space: pre-wrap;">
+                        상품 설명
+                    </div>
+
+                    <div class="location">
+                        위치: <span th:text="${product.location}">게시글 위치 정보</span>
+                    </div>
+
+                    <div class="seller">
+                        <div>
+                            판매자 : <span th:text="${user.username}">판매자명</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <!-- 수정 버튼 -->
+                        <div th:if="${loggedInUser != null and loggedInUser.id == product.userId}">
+                            <a class="btn btn-orange" th:href="@{/products/edit/{id}(id=${product.id})}">수정하기</a>
+                        </div>
+
+                        <!-- 삭제 버튼 -->
+                        <div th:if="${loggedInUser != null and loggedInUser.id == product.userId}">
+                            <form th:action="@{/products/delete/{id}(id=${product.id})}" method="post"
+                                  onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                                <button type="submit" class="btn btn-orange">삭제</button>
+                            </form>
+                        </div>
+
+                        <!-- 채팅 버튼 -->
+                        <div th:if="${loggedInUser != null and loggedInUser.id != user.id}">
+                            <form th:action="@{/chatroom/create}" method="post">
+                                <input type="hidden" name="productId" th:value="${product.id}"/>
+                                <input type="hidden" name="sellerId" th:value="${user.id}"/>
+                                <button type="submit" class="btn-chat">채팅하러 가기</button>
+                            </form>
+                        </div>
+                        <div th:if="${loggedInUser != null and loggedInUser.id != user.id}">
+                            <a class="btn btn-orange" th:href="@{/admin/report/{id}(id=${product.id})}">신고하기</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+<!-- 페이지별 JavaScript -->
+<th:block layout:fragment="pageScript">
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const carouselElement = document.querySelector('#productCarousel');
+            if (carouselElement) {
+                // 버튼 클릭으로만 이동하도록 설정 (Bootstrap 기본 동작)
+                new bootstrap.Carousel(carouselElement, {
+                    interval: false, // 자동 전환 비활성화
+                });
+            } else {
+                console.error('Carousel element not found!');
+            }
+        });
+
+    </script>
+</th:block>
+</body>
+</html>

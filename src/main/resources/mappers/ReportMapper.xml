@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="miniproject.carrotmarket1.mapper.ReportDAO">
+
+    <resultMap id="ReportResultMap" type="Report">
+        <id property="id" column="id"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="status" column="status"/>
+
+        <association property="reporter" column="reporter_id" javaType="User"
+                     select="miniproject.carrotmarket1.mapper.UserDAO.selectById"/>
+        <association property="category" column="category_id" javaType="Category"
+                     select="miniproject.carrotmarket1.mapper.CategoryDAO.selectById"/>
+        <association property="product" column="product_id" javaType="Product"
+                     select="miniproject.carrotmarket1.mapper.ProductDAO.findById"/>
+    </resultMap>
+
+    <select id="getReportListPagination" resultMap="ReportResultMap">
+        select report.*
+        from report inner join user on report.reporter_id = user.id
+        inner join product on report.product_id = product.id
+        inner join category on report.category_id = category.id
+        <where>
+            <if test="startDate != null and startDate != ''">
+                and report.created_at &gt; #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                and report.created_at &lt; #{endDate}
+            </if>
+            <if test="status != null and status != ''">
+                and report.status = #{status}
+            </if>
+            <if test="tag == 'email' and search != ''">
+                and user.email like concat('%', #{search},'%')
+            </if>
+            <if test="tag == 'title' and search != ''">
+                and product.title like concat('%', #{search},'%')
+            </if>
+            <if test="tag == 'name' and search != ''">
+                and category.name like concat('%', #{search},'%')
+            </if>
+        </where>
+        order by created_at desc
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="countFilterReports" resultType="long">
+        select count(*)
+        from report inner join user on report.reporter_id = user.id
+        inner join product on report.product_id = product.id
+        inner join category on report.category_id = category.id
+        <where>
+            <if test="startDate != null and startDate != ''">
+                and report.created_at &gt; #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                and report.created_at &lt; #{endDate}
+            </if>
+            <if test="status != null and status != ''">
+                and report.status = #{status}
+            </if>
+            <if test="tag == 'email' and search != ''">
+                and user.email like concat('%', #{search},'%')
+            </if>
+            <if test="tag == 'title' and search != ''">
+                and product.title like concat('%', #{search},'%')
+            </if>
+            <if test="tag == 'name' and search != ''">
+                and category.name like concat('%', #{search},'%')
+            </if>
+        </where>
+    </select>
+    <select id="getCategoriesByRange" resultType="miniproject.carrotmarket1.dto.CategoryDTO">
+        SELECT id, name, description, type
+        FROM category
+        WHERE type = "REPORT"
+    </select>
+</mapper>

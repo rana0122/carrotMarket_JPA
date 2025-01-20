@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+  <meta charset="UTF-8">
+  <title>상품 수정</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css" rel="stylesheet">
+  <style>
+    .write-container {
+      max-width: 768px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .content-wrapper {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    .image-section {
+      margin-bottom: 32px;
+    }
+    .image-carousel {
+      position: relative;
+      width: 100%;
+      height: 300px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .swiper {
+      width: 100%;
+      height: 100%;
+    }
+    .swiper-slide {
+      position: relative;
+      background: #f8f9fa;
+    }
+    .swiper-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      z-index: 10;
+    }
+    .image-upload-btn {
+      width: 100%;
+      height: 48px;
+      background: #f8f9fa;
+      border: 1px dashed #dee2e6;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #868e96;
+      margin-top: 16px;
+    }
+    .form-group {
+      margin-bottom: 24px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #212529;
+    }
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    select.form-control {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      height: 48px; /* 높이를 넉넉하게 설정 */
+      line-height: 1.5; /* 높이에 맞춰 줄 간격 조정 */
+      padding-top: 8px; /* 높이와의 균형을 맞추기 위한 패딩 조정 */
+      padding-bottom: 8px;
+      box-sizing: border-box; /* 패딩 포함한 크기 조정 */
+    }
+    textarea.form-control {
+      min-height: 120px;
+      resize: vertical;
+    }
+    .submit-btn {
+      width: 100%;
+      height: 48px;
+      background: #ff6f0f;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .submit-btn:hover {
+      background: #ff8534;
+    }
+    .price-input {
+      position: relative;
+    }
+    .price-input::before {
+      content: "₩";
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #495057;
+    }
+    .price-input input {
+      padding-left: 28px;
+    }
+    .swiper-button-next,
+    .swiper-button-prev {
+      color: #ff6f0f;
+    }
+  </style>
+</head>
+<body>
+<div layout:fragment="content">
+  <div class="write-container">
+    <form th:action="@{/products/update/{id}(id=${product.id})}"
+          method="post"
+          enctype="multipart/form-data"
+          th:object="${product}">
+
+      <div class="content-wrapper">
+        <div class="image-section">
+          <div class="image-carousel">
+            <div class="swiper">
+              <div class="swiper-wrapper">
+                <th:block th:if="${product.images != null}">
+                  <div th:each="image : ${product.images}"
+                       class="swiper-slide"
+                       th:data-image-id="${image.id}">
+                    <img th:src="${image.imageUrl}" alt="상품 이미지">
+                    <button type="button" class="delete-btn"
+                            th:onclick="'deleteImage(' + ${image.id} + ')'">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </th:block>
+              </div>
+              <div class="swiper-pagination"></div>
+              <div class="swiper-button-next"></div>
+              <div class="swiper-button-prev"></div>
+            </div>
+          </div>
+          <label class="image-upload-btn">
+            <input type="file"
+                   name="productImages"
+                   multiple
+                   accept="image/*"
+                   style="display: none;"
+                   onchange="handleImageUpload(this)">
+            <i class="fas fa-camera"></i>
+            <span class="ml-2">이미지 업로드 (최대 10장)</span>
+          </label>
+        </div>
+
+        <div class="form-section">
+          <div class="form-group">
+            <label for="category">카테고리</label>
+            <select id="category"
+                    class="form-control" required
+                    th:field="*{categoryId}">
+              <option value="" disabled >카테고리를 선택하세요</option>
+              <option th:each="cat : ${category}"
+                      th:value="${cat.id}"
+                      th:text="${cat.name}"
+                      th:selected="${product.category.id==cat.id}">
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="title">제목</label>
+            <input type="text"
+                   id="title"
+                   class="form-control"
+                   th:field="*{title}"
+                   placeholder="상품 제목을 입력해주세요">
+          </div>
+
+          <div class="form-group">
+            <label for="description">설명</label>
+            <textarea id="description"
+                      class="form-control"
+                      th:field="*{description}"
+                      placeholder="상품 설명을 입력해주세요"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="price">가격</label>
+            <div class="price-input">
+              <input type="number"
+                     id="price"
+                     class="form-control"
+                     th:field="*{price}"
+                     placeholder="숫자만 입력해주세요">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="address">주소</label>
+            <input type="text" class="form-control" id="address" placeholder="주소를 입력하세요" oninput="searchAddress()">
+            <div id="addressList" class="list-group" style="max-height: 200px; overflow-y: auto;"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="location">위치</label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="location" name="location" th:field="*{location}" placeholder="현재 위치를 가져오세요" readonly>
+              <div class="input-group-append">
+                <button type="button" class="btn btn-outline-secondary" onclick="getCurrentLocation()">현재 위치 수집</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 숨겨진 위도와 경도 필드 -->
+          <input type="hidden" id="latitude" name="latitude" th:value="${product.latitude}">
+          <input type="hidden" id="longitude" name="longitude" th:value="${product.longitude}">
+
+
+          <input type="hidden" name="deleteImageIds" id="deleteImageIds">
+          <button type="submit" class="submit-btn">수정완료</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div layout:fragment="pageScript">
+<!--  <script th:src="'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + ${kakaoJavascriptKey} + '&libraries=services'"></script>-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
+  <script th:inline="javascript">
+    let swiper;
+    let deletedImageIds = [];
+
+    function initializeSwiper() {
+      if (document.querySelector('.swiper-slide')) {
+        swiper = new Swiper('.swiper', {
+          slidesPerView: 1,
+          spaceBetween: 30,
+          loop: false,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev'
+          }
+        });
+      }
+    }
+
+    function deleteImage(imageId) {
+      const slideElement = document.querySelector(`[data-image-id="${imageId}"]`);
+      if (slideElement) {
+        swiper.removeSlide(swiper.activeIndex);
+
+        if (swiper.slides.length === 0) {
+          alert('최소 1장의 이미지를 업로드해야 합니다.');
+          return;
+        }
+
+        if (imageId) {
+          deletedImageIds.push(imageId);
+          document.getElementById('deleteImageIds').value = deletedImageIds.join(',');
+        }
+
+        if (swiper.slides.length === 0) {
+          document.querySelector('.image-carousel').style.display = 'none';
+        }
+      }
+    }
+
+    function handleImageUpload(input) {
+      const files = input.files;
+      const maxFiles = 10;
+      const currentImages = document.querySelectorAll('.swiper-slide').length;
+
+      if (files.length + currentImages > maxFiles) {
+        alert(`이미지는 최대 ${maxFiles}장까지 업로드 가능합니다.`);
+        input.value = '';
+        return;
+      }
+
+      document.querySelector('.image-carousel').style.display = 'block';
+
+      if (!swiper) {
+        initializeSwiper();
+      }
+
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const newSlide = `
+                            <div class="swiper-slide">
+                                <img src="${e.target.result}" alt="상품 이미지">
+                                <button type="button" class="delete-btn" onclick="deleteImage(null)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        `;
+          swiper.appendSlide(newSlide);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    document.querySelector('form').addEventListener('submit', function(e) {
+      const imagesCount = document.querySelectorAll('.swiper-slide').length;
+
+      if (imagesCount < 1) {
+        e.preventDefault();
+        alert('최소 1장의 이미지를 업로드해야 합니다.');
+      }
+    });
+    //========================구글 위치정보 수집========================//
+    // 사용자 위치 정보 수집 - 위도, 경도
+    function getCurrentLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(success, error);
+      } else {
+        alert("현재 위치 정보를 사용할 수 없습니다.");
+      }
+    }
+
+    function success(position) {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      document.getElementById("latitude").value = latitude;
+      document.getElementById("longitude").value = longitude;
+      convertLatLngToAddress(latitude, longitude);
+    }
+
+    function error() {
+      alert("위치 정보를 가져오는 데 실패했습니다.");
+    }
+
+    // 위도와 경도를 주소로 변환하여 위치 필드에 설정
+    function convertLatLngToAddress(latitude, longitude) {
+      const url = `/get-address?latitude=${latitude}&longitude=${longitude}`;
+
+      $.getJSON(url, function(data) {
+        if (data.status === "OK" && data.results[0]) {
+          let address = data.results[0].formatted_address;
+          // "대한민국" 문자열 제거
+          address = address.replace("대한민국 ", ""); // "대한민국"과 그 뒤 공백을 제거
+          console.log("Converted Address: ", address);  // 주소 출력
+          document.getElementById("location").value = address;
+
+        } else {
+          alert("주소 변환에 실패했습니다.");
+        }
+      }).fail(function() {
+        alert("주소를 가져오는 중 오류가 발생했습니다.");
+      });
+    }
+    //========================Kakao 위치정보 수집========================//
+    // Kakao API 주소 검색 기능 추가 (REST API 호출)
+    function searchAddress() {
+      const query = document.getElementById('address').value;
+      if (!query) {
+        document.getElementById('addressList').innerHTML = '';
+        return;
+      }
+
+      // REST API를 호출하여 주소 검색
+      fetch(`/get-address-kakao?query=${encodeURIComponent(query)}`)
+              .then(response => response.json())
+              .then(data => {
+                if (data.documents) {
+                  const addressList = document.getElementById('addressList');
+                  addressList.innerHTML = '';
+
+                  data.documents.forEach(function(place) {
+                    const listItem = document.createElement('a');
+                    listItem.href = "#";
+                    listItem.className = 'list-group-item list-group-item-action';
+                    listItem.innerText = place.address_name;
+                    listItem.onclick = function() {
+                      selectAddress(place);
+                    };
+                    addressList.appendChild(listItem);
+                  });
+                }
+              })
+              .catch(error => {
+                console.error('Error fetching address:', error);
+                alert("주소를 가져오는 중 오류가 발생했습니다.");
+              });
+    }
+
+    // 주소 선택 시 위도, 경도 설정
+    function selectAddress(place) {
+      document.getElementById('address').value = place.address_name;
+      document.getElementById('location').value = place.address_name;
+      document.getElementById('latitude').value = place.y;
+      document.getElementById('longitude').value = place.x;
+      document.getElementById('addressList').innerHTML = ''; // 주소 리스트 초기화
+    }
+
+    document.addEventListener('DOMContentLoaded', initializeSwiper);
+  </script>
+</div>
+</body>
+</html>

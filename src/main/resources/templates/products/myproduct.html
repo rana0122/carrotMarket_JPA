@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>당근마켓 클론 - 게시판</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f8f9fa; }
+    .card { border: none; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: 0.3s; }
+    .card:hover { box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); }
+    .btn-orange {
+      background-color: #ff8a3d;
+      color: white;
+      border: none;
+      /* margin-top 제거 */
+    }
+    .btn-orange:hover {
+      background-color: #e6762d;
+      color: white;
+    }
+
+    /* 카드 크기 고정 */
+    .card {
+      width: 12rem; /* 카드의 너비 고정 */
+      height: 400px; /* 카드의 높이 조정 (전체 높이를 400px으로 줄임) */
+    }
+
+    .card-img-top {
+      height: 250px; /* 이미지 높이 (비율 유지하여 300px에서 줄임) */
+      object-fit: cover; /* 이미지가 고정된 크기에 맞게 조정되도록 설정 */
+    }
+
+    .carousel-inner {
+      height: 250px; /* 슬라이드 높이 (이미지 높이에 맞춤) */
+    }
+
+    .card-body {
+      height: 60px; /* 카드 본문의 높이 유지 (기존과 동일) */
+    }
+    .list-group {
+      width: 100%; /* 카테고리의 너비를 버튼과 맞춤 */
+    }
+    :root {
+      --carrot-orange: #ff6f0f;
+      --carrot-light-orange: #fff8f5;
+      --carrot-gray: #868b94;
+    }
+
+    /* 상태 토글 스타일 */
+    .status-toggle {
+      padding: 12px 0;
+      margin-bottom: 24px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .status-toggle .btn {
+      color: var(--carrot-gray);
+      font-size: 16px;
+      padding: 8px 0;
+      margin-right: 24px;
+      border: none;
+      background: none;
+      position: relative;
+    }
+
+    .status-toggle .btn.active {
+      color: var(--carrot-orange);
+      font-weight: 600;
+    }
+
+    .status-toggle .btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -12px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: var(--carrot-orange);
+    }
+
+    /* 카테고리 목록 스타일 */
+    .category-list {
+      padding: 16px 0;
+    }
+
+    .category-item {
+      display: block;
+      padding: 12px 16px;
+      color: #212529;
+      text-decoration: none;
+      border-radius: 6px;
+      margin-bottom: 4px;
+      font-size: 15px;
+      transition: all 0.2s ease;
+    }
+
+    .category-item:hover {
+      background-color: var(--carrot-light-orange);
+      color: var(--carrot-orange);
+    }
+
+    .category-item.active {
+      color: var(--carrot-orange);
+      font-weight: 600;
+      background-color: var(--carrot-light-orange);
+    }
+
+    /* 글쓰기 버튼 */
+    .write-btn {
+      background-color: var(--carrot-orange);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    .write-btn:hover {
+      background-color: #ff8534;
+      color: white;
+    }
+    .input-group .form-control,
+    .input-group .btn-orange {
+      border-radius: 0 !important;
+    }
+    .input-group .form-control {
+      border-right: 0;
+    }
+    .input-group .btn-orange {
+      border-left: 0;
+    }
+    .input-group .input-group-append .btn {
+      margin: 0; /* 버튼에 여분의 마진 제거 */
+    }
+    .card-title {
+      white-space: nowrap; /* 텍스트를 한 줄로 제한 */
+      overflow: hidden; /* 내용이 넘칠 경우 숨김 */
+      text-overflow: ellipsis; /* 넘친 부분을 "..."으로 표시 */
+    }
+  </style>
+
+</head>
+<body>
+  <!-- Body Fragment -->
+  <th:block layout:fragment="content">
+    <!-- 메인 컨테이너 -->
+    <div class="container mt-5">
+      <div class="row">
+        <!-- 카테고리 사이드바 -->
+        <!-- 사이드바 HTML -->
+        <div class="col-md-3">
+
+
+          <h5 class="mb-3">거래 내역</h5>
+
+          <!-- 카테고리 목록 -->
+          <div class="category-list">
+            <a th:each="category : ${categories}"
+               th:href="@{/products(categoryId=${category.id}, status=${status})}"
+               th:text="${category.name}"
+               class="category-item"
+               th:classappend="${selectedCategoryId != null && selectedCategoryId == category.id} ? 'active' : ''">
+            </a>
+
+            <th:block>
+              <a th:href="@{/myproduct/sell/{userId}(userId=${session.loggedInUser.id})}" class="btn">판매한 물품</a>
+              <a th:href="@{/myproduct/buy/{userId}(userId=${session.loggedInUser.id})}" class="btn">구매한 물품</a>
+            </th:block>
+          </div>
+
+
+          <!-- 글쓰기 버튼 -->
+          <th:block th:if="${session.loggedInUser!=null}">
+            <a th:href="@{/products/write}" class="btn btn-orange w-100">게시글 작성하기</a>
+          </th:block>
+        </div>
+
+        <!-- 상품 목록 (한 줄에 4개씩) -->
+        <div class="col-md-9">
+          <div class="row row-cols-1 row-cols-md-4">
+            <div class="col mb-4" th:each="item, itemStat : ${products}">
+              <div class="card">
+                <div class="carousel slide" data-ride="carousel" th:id="'carouselExampleControls' + ${itemStat.index}">
+                  <div class="carousel-inner">
+                    <div th:each="image, stat : ${item.images}" th:classappend="${stat.first} ? 'active' : ''" class="carousel-item">
+                      <img th:src="${image.imageUrl}" class="d-block w-100 card-img-top" alt="상품 이미지">
+                    </div>
+                  </div>
+                  <a class="carousel-control-prev" th:href="'#carouselExampleControls' + ${itemStat.index}" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">이전</span>
+                  </a>
+                  <a class="carousel-control-next" th:href="'#carouselExampleControls' + ${itemStat.index}" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">다음</span>
+                  </a>
+                </div>
+                <div class="card-body" th:if="${item.usedYn == 'N'}">
+                  <p class="card-text text-danger">숨겨진 게시글입니다</p>
+                </div>
+                <div class="card-body" th:if="${item.usedYn != 'N'}">
+                  <h6 class="card-title" th:text="${item.title}">상품명</h6>
+                  <p class="card-text text-muted" th:text="'₩ ' + ${item.price}">가격</p>
+                  <a th:href="@{'/products/detail/' + ${item.id}}" class="btn btn-orange btn-block">자세히 보기</a>
+
+                </div>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </th:block>
+  <!-- Bootstrap JS 및 종속성 -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script> <!-- jQuery Full 버전 -->
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+  <title>상품 등록</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .write-container {
+      max-width: 1024px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .content-wrapper {
+      display: flex;
+      gap: 40px;
+      margin-top: 20px;
+    }
+    .image-section {
+      flex: 1;
+    }
+    .form-section {
+      flex: 1;
+    }
+    .image-upload {
+      border: 2px dashed #e9ecef;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+      cursor: pointer;
+      background: #f8f9fa;
+    }
+    .image-preview {
+      width: 100%;
+      height: 400px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #dee2e6;
+    }
+    .carousel {
+      height: 100%;
+    }
+    .carousel img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    .carousel img.active {
+      display: block;
+    }
+    .carousel-nav {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .carousel-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #dee2e6;
+      cursor: pointer;
+    }
+    .carousel-dot.active {
+      background: #ff6f0f;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #212529;
+    }
+    .form-control {
+      width: 100%;
+      padding: 2px;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: #ff6f0f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .delete-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 24px;
+        height: 24px;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        z-index: 10;
+    }
+  </style>
+</head>
+<body>
+<div layout:fragment="content">
+  <div class="write-container">
+    <h1 class="mb-4">상품 등록</h1>
+    <form th:action="@{/products/save}" method="post" enctype="multipart/form-data">
+    <div class="content-wrapper">
+      <div class="image-section">
+        <div class="image-upload">
+          <!-- input type이 file이고, name이 productImages로 설정됨 -->
+            <input type="file" id="productImages" name="productImages" multiple accept="image/*" required style="width: 1px; height: 1px; opacity: 0; position: absolute;">
+            <label for="productImages" class="image-upload-btn">
+                <i class="fas fa-camera" style="font-size: 48px; color: #adb5bd; margin-bottom: 12px;"></i>
+                <p style="margin: 0; color: #495057;">이미지를 업로드해주세요</p>
+            </label>
+        </div>
+        <div class="image-preview">
+          <div class="carousel"></div>
+        </div>
+        <div class="carousel-nav"></div>
+      </div>
+
+      <div class="form-section">
+
+          <div class="form-group">
+
+            <label class="form-label">카테고리</label>
+                      <select id="category" name="categoryId" class="form-control" required>
+                        <option value="" disabled selected>카테고리를 선택하세요</option>
+                        <option th:each="category : ${category}"
+                                th:value="${category.id}"
+                                th:text="${category.name}"></option>
+                      </select><br>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">제목</label>
+            <input type="text" class="form-control" name="title" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">설명</label>
+            <textarea class="form-control" name="description" rows="5" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">가격</label>
+            <input type="number" class="form-control" name="price" required>
+          </div>
+
+          <button type="submit" class="submit-btn">등록하기</button>
+
+      </div>
+    </div>
+    </form>
+  </div>
+</div>
+
+<th:block layout:fragment="pageScript">
+  <script>
+      document.querySelector('form').addEventListener('submit', function(e) {
+          const files = document.getElementById('productImages').files;
+          if (files.length < 1) {
+              e.preventDefault();
+              alert('최소 1장의 이미지를 업로드해야 합니다.');
+          }
+      });
+    document.addEventListener('DOMContentLoaded', function() {
+      const imageInput = document.getElementById('productImages');
+      const carousel = document.querySelector('.carousel');
+      const carouselNav = document.querySelector('.carousel-nav');
+      let currentSlide = 0;
+      let images = [];
+
+      imageInput.addEventListener('change', function(e) {
+        const files = e.target.files;
+
+          if (files.length > 10) {
+              alert('이미지는 최대 10장까지 업로드 가능합니다.');
+              imageInput.value = ''; // 파일 선택 초기화
+              return;
+          }
+          images = [];
+        carousel.innerHTML = '';
+        carouselNav.innerHTML = '';
+
+        for (let file of files) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            images.push(e.target.result);
+            updateCarousel();
+          }
+          reader.readAsDataURL(file);
+        }
+      });
+
+      function updateCarousel() {
+        carousel.innerHTML = '';
+        carouselNav.innerHTML = '';
+
+        images.forEach((image, index) => {
+            const slide = document.createElement('div');
+            slide.className = 'swiper-slide';
+
+            const img = document.createElement('img');
+            img.src = image;
+            img.className = index === currentSlide ? 'active' : '';
+            carousel.appendChild(img);
+            // 삭제 버튼 추가
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+            deleteBtn.addEventListener('click', () => deleteImage(index));
+            slide.appendChild(deleteBtn);
+
+            carousel.appendChild(slide);
+
+            const dot = document.createElement('div');
+            dot.className = `carousel-dot ${index === currentSlide ? 'active' : ''}`;
+            dot.addEventListener('click', () => showSlide(index));
+            carouselNav.appendChild(dot);
+        });
+      }
+        function deleteImage(index) {
+            images.splice(index, 1);
+            updateCarousel();
+            if (images.length === 0) {
+                alert('최소 1장의 이미지를 업로드해야 합니다.');
+            }
+        }
+
+
+        function showSlide(index) {
+        currentSlide = index;
+        const imgs = carousel.querySelectorAll('img');
+        const dots = carouselNav.querySelectorAll('.carousel-dot');
+
+        imgs.forEach((img, idx) => {
+          img.className = idx === currentSlide ? 'active' : '';
+        });
+
+        dots.forEach((dot, idx) => {
+          dot.className = `carousel-dot ${idx === currentSlide ? 'active' : ''}`;
+        });
+      }
+    });
+  </script>
+</th:block>
+</body>
+</html>

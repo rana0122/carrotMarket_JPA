@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신고 사유 선택</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: #f8f9fa;
+            line-height: 1.5;
+            color: #212529;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 24px auto;
+            padding: 24px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            color: #212529;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: white;
+            margin-bottom: 8px;
+        }
+
+        input[readonly] {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .button-container-inline {
+            text-align: right;
+        }
+
+        button {
+            background-color: #ff6f0f;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            width: auto;
+            min-width: 120px;
+        }
+
+        button:hover {
+            background-color: #ff8534;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <div class="container">
+            <h1>신고페이지</h1>
+            <form th:action="@{/admin/report/{id}(id=${report.product.id})}" th:method="post">
+            <input type="hidden" id="id" name="id">
+
+                <div class="form-group">
+                    <label for="product">상품</label>
+                    <input type="text" id="product" th:value="${report.product.title}" readonly>
+                    <input type="hidden" name="productId" th:value="${report.product.id}">
+                </div>
+
+                <div class="form-group">
+                    <label for="reporter">신고자</label>
+                    <input type="text" id="reporter" th:value="${report.reporter.email}" readonly>
+                    <input type="hidden" name="reporterId" th:value="${report.reporter.id}">
+                </div>
+
+                <div class="form-group">
+                    <label for="category">카테고리</label>
+                    <select id="category" name="categoryId" required>
+                        <option th:each="category : ${categories}"
+                                th:value="${category.id}"
+                                th:text="${category.description}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="details">신고 내용</label>
+                    <textarea id="details" name="details" rows="5" th:text="${report.details}"></textarea>
+                    <input type="hidden" name="detail" th:value="${report.details}">
+                </div>
+
+                <input type="hidden" name="status" th:value="${report.status}">
+
+                <div class="button-container-inline">
+                    <button type="submit">적용</button>
+                </div>
+            </form>
+        </div>
+    </th:block>
+</body>
+</html>
+

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>신고 수정</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: #f8f9fa;
+            line-height: 1.5;
+            color: #212529;
+        }
+
+        .container {
+            max-width: 720px;
+            width: 100%;
+            margin: 24px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 24px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e9ecef;
+            color: #212529;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            background-color: #fff;
+        }
+
+        input[readonly], textarea[readonly] {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        [style="display: flex; align-items: center;"] {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+        }
+
+        .button-container-inline {
+            margin-left: auto;
+        }
+
+        button {
+            background-color: #ff6f0f;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            width: auto;
+            min-width: 80px;
+        }
+
+        button:hover {
+            background-color: #ff8534;
+        }
+
+        select {
+            flex: 1;
+            max-width: 200px;
+            margin: 0;
+        }
+
+        form {
+            margin-bottom: 32px;
+        }
+
+        form:last-child {
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+                padding: 16px;
+            }
+
+            [style="display: flex; align-items: center;"] {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            select {
+                max-width: 100%;
+            }
+
+            .button-container-inline {
+                margin: 0;
+                width: 100%;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="container">
+        <h1>신고 수정</h1>
+        <form th:action="@{'/admin/reports/update/' + ${report.id}}" th:method="post">
+            <input type="hidden" id="id" name="id">
+
+            <label for="product">상품</label>
+            <input type="text" id="product" name="productId" th:value="${report.product.title}" readonly>
+
+            <label for="reporter">신고된 사용자</label>
+<!--            <input type="text" id="reporter" name="reporterId" th:value="${report.reporter.email}" readonly>-->
+            <input type="text" id="reporter" name="reporterId" th:value="${report.product.user.email}" readonly>
+
+            <label for="category">카테고리</label>
+            <input type="text" id="category" name="categoryName" th:value="${report.category.description}" readonly>
+
+            <label for="details">신고 내용</label>
+            <textarea id="details" name="details" rows="5" th:text="${report.details}" readonly></textarea>
+
+            <label for="status">상태</label>
+            <div style="display: flex; align-items: center;">
+                <select id="status" name="status" required>
+                    <option th:each="stat : ${statusList}"
+                            th:value="${stat.name()}"
+                            th:text="${stat.displayName}"
+                            th:selected="${stat.name()} == ${report.status.name()}"></option>
+                </select>
+                <div class="button-container-inline">
+                    <button type="submit">적용</button>
+                </div>
+            </div>
+        </form>
+
+        <!--게시글 숨김 조치-->
+        <form th:action="@{'/admin/reports/hide-product/' + ${report.product.id}}" th:method="post" style="margin-top: 15px;">
+            <input type="hidden" id="productId" name="productId" th:value="${report.product.id}">
+            <label for="usedYn">게시글 숨김 조치</label>
+            <div style="display: flex; align-items: center;">
+                <select id="usedYn" name="usedYn">
+                    <option value="NO_ACTION" th:selected="${report.product.usedYn == 'Y'}">조치 없음</option>
+                    <option value="HIDE" th:selected="${report.product.usedYn == 'N'}">게시글 숨김</option>
+                </select>
+                <div class="button-container-inline">
+                    <button type="submit">적용</button>
+                </div>
+            </div>
+        </form>
+
+        <!--사용자 계정 잠금 조치-->
+        <form th:action="@{'/admin/reports/lock-user/' + ${report.product.userId}}" th:method="post" style="margin-top: 15px;">
+            <input type="hidden" id="userId" name="userId" th:value="${report.product.userId}">
+            <label for="lockUser">사용자 계정 잠금 조치</label>
+            <div style="display: flex; align-items: center;">
+                <select id="lockUser" name="lockUser">
+                    <option value="NO_ACTION" th:selected="${report.reporter.lockedYn == 'N'}">조치 없음</option>
+                    <option value="LOCK_ACCOUNT" th:selected="${report.reporter.lockedYn == 'Y'}">계정 잠금</option>
+                </select>
+                <div class="button-container-inline">
+                    <button type="submit">적용</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</th:block>
+</body>
+</html>

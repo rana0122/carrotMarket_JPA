@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title>신고 관리</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff7e36;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 16px;
+            text-align: left;
+        }
+
+        table th, table td {
+            padding: 12px 15px;
+        }
+
+        table thead tr {
+            background-color: #ff7e36;
+            color: #ffffff;
+        }
+
+        table tbody tr {
+            border-bottom: 1px solid #dddddd;
+        }
+
+        table tbody tr:nth-of-type(even) {
+            background-color: #f3f3f3;
+        }
+
+        table tbody tr:last-of-type {
+            border-bottom: 2px solid #ff7e36;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #ffffff;
+            background-color: #ff7e36;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #e6712b;
+        }
+
+        .status-pending {
+            color: #ff7e36;
+            font-weight: bold;
+        }
+
+        .status-resolved {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .filter-form {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .filter-form div {
+            display: inline-block;
+            text-align: left;
+        }
+
+        .filter-form input, .filter-form select {
+            margin-left: 10px;
+            margin-right: 10px;
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        .btn {
+            margin-left: 10px;
+        }
+
+    </style>
+</head>
+<body>
+<!-- Body Fragment -->
+<th:block layout:fragment="content">
+    <div class="container">
+        <h1 class="page-title">신고 관리</h1>
+
+        <!-- 조회 조건 폼 -->
+        <form th:action="@{/admin/reports}" th:method="get" class="filter-form">
+            <div>
+                <select id="tag" name="tag" class="input-select">
+                    <option th:value="email">이메일</option>
+                    <option th:value="title">상품명</option>
+                    <option th:value="name">카테고리</option>
+                </select>
+                <input type="text" name="search" />
+
+            </div>
+            <div>
+                <label for="startDate">시작 날짜:</label>
+                <input type="date" id="startDate" name="startDate" class="input-date">
+
+                <label for="endDate">종료 날짜:</label>
+                <input type="date" id="endDate" name="endDate" class="input-date">
+
+                <label for="status">상태:</label>
+                <select id="status" name="status" class="input-select">
+                    <option value="">전체</option>
+                    <option th:each="stat : ${statusList}"
+                            th:value="${stat.name()}"
+                            th:text="${stat.displayName}"></option>
+                </select>
+
+                <button type="submit" class="btn">조회</button>
+            </div>
+        </form>
+
+
+        <!-- 신고 목록 테이블 -->
+        <table>
+            <thead>
+            <tr>
+                <th>신고된 사용자</th>
+                <th>상품명</th>
+                <th>카테고리</th>
+                <th>상태</th>
+                <th>신고일</th>
+
+                <th>수정</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="report : ${reports}">
+                <input type="hidden" id="id" name="id">
+                <td th:text="${report.product.user.email}"></td>
+                <td th:text="${report.product.title}"></td>
+                <td th:text="${report.category.name}"></td>
+                <td>
+                        <span th:text="${report.status}"
+                              th:classappend="${report.status.name() == 'PENDING' ? 'status-pending' : 'status-resolved'}">
+                        </span>
+                </td>
+                <td th:text="${#dates.format(report.createdAt, 'yyyy-MM-dd')}"></td>
+
+
+                <td>
+                    <a th:href="@{'/admin/reports/' + ${report.id}}" class="btn">수정</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="pagination" style="display: flex; justify-content: center; margin-top: 20px;">
+            <!--Previous 버튼-->
+            <ul class="pagination" style="list-style: none; display: flex; gap: 10px;">
+                <li th:if="${page.hasPrevious()}" style="display: inline-block;">
+                    <a th:href="@{/admin/reports(
+                    page=${page.number - 1},
+                    size=${page.size},
+                    startDate=${currentFilters['startDate']},
+                    endDate=${currentFilters['endDate']},
+                    status=${currentFilters['status']},
+                    search=${currentFilters['search']},
+                    tag=${currentFilters['tag']})}"
+                       style="padding: 10px 15px; background-color: #FF7E36; color: white; text-decoration: none; border-radius: 5px; transition: background-color 0.3s;">
+                        Previous
+                    </a>
+                </li>
+
+                <!-- 숫자 페이지 -->
+                <li th:each="pageNum : ${pageNumbers}" style="display: inline-block;">
+                    <a th:href="@{/admin/reports(
+                    page=${pageNum},
+                    size=${page.size},
+                    startDate=${currentFilters['startDate']},
+                    endDate=${currentFilters['endDate']},
+                    status=${currentFilters['status']},
+                    search=${currentFilters['search']},
+                    tag=${currentFilters['tag']})}"
+                       th:text="${pageNum + 1}"
+                       th:classappend="${page.number == pageNum} ? 'active' : ''"
+                       style="padding: 10px 15px; background-color: #FF7E36; color: white; text-decoration: none; border-radius: 5px; transition: background-color 0.3s;">
+                    </a>
+                </li>
+
+                <!--Next 버튼-->
+                <li th:if="${page.hasNext()}" style="display: inline-block;">
+                    <a th:href="@{/admin/reports(
+                    page=${page.number + 1},
+                    size=${page.size},
+                    startDate=${currentFilters['startDate']},
+                    endDate=${currentFilters['endDate']},
+                    status=${currentFilters['status']},
+                    search=${currentFilters['search']},
+                    tag=${currentFilters['tag']})}"
+                       style="padding: 10px 15px; background-color: #FF7E36; color: white; text-decoration: none; border-radius: 5px; transition: background-color 0.3s;">
+                        Next
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>
