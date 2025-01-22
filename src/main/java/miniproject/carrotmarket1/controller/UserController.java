@@ -1,7 +1,10 @@
 package miniproject.carrotmarket1.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.HttpSession;
+import miniproject.carrotmarket1.dto.KakaoUserInfoDTO;
 import miniproject.carrotmarket1.dto.UserDTO;
+import miniproject.carrotmarket1.service.KakaoService;
 import miniproject.carrotmarket1.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,19 +21,25 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final KakaoService kakaoService;
 
     //profile upload folder
     @Value("${file.upload-dir}")
     private String uploadDir;
+    @Value("${kakao.restApi.Key}")
+    private String kakaoRestApiKey;
+
+    @Value("${kakao.redirect-uri}")
+    private String kakaoRedirectUri;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, KakaoService kakaoService) {
         this.userService = userService;
-
+        this.kakaoService = kakaoService;
     }
 
     //========================로그인(위치정보 수집)===============================//
-    @PostMapping("/login")
+    @PostMapping("/userlogin")
     public String login(
             @RequestParam String email,
             @RequestParam String password,
@@ -58,6 +67,41 @@ public class UserController {
         }
         // 로그인 실패 시
         return "redirect:/products?loginError=true";
+    }
+
+
+    @GetMapping("/kakaoLogin")
+    public String kakaoLogin(
+            @RequestParam String code,
+            @RequestParam(required = false) Double latitude,
+            @RequestParam(required = false) Double longitude,
+            @RequestParam(required = false) String location,
+            HttpSession session) throws JsonProcessingException {
+        // 1. 카카오 로그인 처리
+        KakaoUserInfoDTO kakaoUserInfo = kakaoService.kakaoLogin(code);
+
+        // 2. 기존 사용자 확인 또는 새 사용자 생성
+        UserDTO user = userService.findOrCreateKakaoUser(kakaoUserInfo);
+
+        if (user != null) {
+            if ("N".equals(user.getLockedYn())) {
+                // 위치 정보 업데이트
+                if (latitude != null && longitude != null && location != null) {
+                    userService.updateUserLocation(user.getId(), latitude, longitude, location);
+                    // 로그인 시 변경된 주소로 세션에 전달
+                    user.setLocation(location);
+                    user.setLatitude(latitude);
+                    user.setLongitude(longitude);
+                }
+                session.setAttribute("loggedInUser", user); // 세션에 사용자 정보 저장
+                return "redirect:/products";
+            } else if ("Y".equals(user.getLockedYn())) {
+                return "redirect:/products?accountLocked=true"; // 정지된 계정 상태 전달
+            }
+        }
+        // 로그인 실패 시
+        return "redirect:/products?loginError=true";
+
     }
 
 

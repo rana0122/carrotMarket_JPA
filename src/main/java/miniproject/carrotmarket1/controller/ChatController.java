@@ -53,7 +53,7 @@ public class ChatController {
         UserDTO buyer = (UserDTO) session.getAttribute("loggedInUser");
         if (buyer == null) {
             model.addAttribute("errorMessage", "로그인이 필요합니다.");
-            return "redirect:/login"; // 로그인 페이지로 리다이렉트
+            return "redirect:/userlogin"; // 로그인 페이지로 리다이렉트
         }
 
         // 채팅방 생성
@@ -70,7 +70,7 @@ public class ChatController {
             ChatRoomDTO chatRoom = chatRoomOptional.get();
             UserDTO loggedInUser = (UserDTO) session.getAttribute("loggedInUser");
             if (loggedInUser == null) {
-                return "redirect:/login";  // 로그인 정보가 없으면 로그인 페이지로 리디렉션
+                return "redirect:/userlogin";  // 로그인 정보가 없으면 로그인 페이지로 리디렉션
             }
             model.addAttribute("chatRoom", chatRoom);
             model.addAttribute("loggedInUser", loggedInUser);

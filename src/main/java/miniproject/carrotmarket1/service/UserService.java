@@ -1,12 +1,14 @@
 package miniproject.carrotmarket1.service;
 
 import jakarta.servlet.http.HttpSession;
+import miniproject.carrotmarket1.dto.KakaoUserInfoDTO;
 import miniproject.carrotmarket1.dto.UserDTO;
 import miniproject.carrotmarket1.entity.User;
 import miniproject.carrotmarket1.repository.UserRepository;
 import miniproject.carrotmarket1.util.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,20 +16,24 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.UUID;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+
 
     @Value("${file.upload-dir}") // application.properties의 값을 주입
     private String uploadDir;
 
     @Autowired
-    public UserService(UserRepository userRepository, UserMapper userMapper) {
+    public UserService(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     //로그인 시 패스워드 확인
@@ -121,5 +127,29 @@ public class UserService {
     // USER 조회 By Id
     public UserDTO findById(Long id) {
         return userMapper.toDto(userRepository.findById(id).get());
+    }
+
+    public UserDTO findOrCreateKakaoUser(KakaoUserInfoDTO kakaoUserInfo) {
+        // 1. 이메일을 기준으로 사용자 확인
+        User existingUser = userRepository.findByEmail(kakaoUserInfo.getEmail());
+
+        if (existingUser != null) {
+            // 기존 사용자 반환
+            return userMapper.toDto(existingUser);
+        }
+
+        // 2. 새 사용자 생성
+        String randomPassword = passwordEncoder.encode("KAKAO_USER"); // 고정값 또는 랜덤값 사용
+//        String randomPassword = UUID.randomUUID().toString();
+        User newUser = User.builder()
+                .username(kakaoUserInfo.getNickname())
+                .email(kakaoUserInfo.getEmail())
+//                .password(randomPassword)
+                .userGroup("GENERAL")
+                .lockedYn("N")
+                .build();
+
+        userRepository.save(newUser);
+        return userMapper.toDto(newUser);
     }
 }

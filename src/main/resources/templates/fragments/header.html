@@ -67,7 +67,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form id="loginForm" action="/login" method="post">
+                    <form id="loginForm" action="/userlogin" method="post">
                         <div class="form-group">
                             <label for="loginEmail">이메일</label>
                             <input type="email" class="form-control" id="loginEmail" name="email" placeholder="이메일 입력"
@@ -84,12 +84,20 @@
                         <button type="submit" class="btn btn-orange btn-block"
                                 onclick="event.preventDefault(); getLocationAndSubmit();">로그인
                         </button>
+                        <div class="text-center my-3">
+                            <a th:href="'https://kauth.kakao.com/oauth/authorize?client_id=' + @{${@environment.getProperty('kakao.restApi.Key')}} + '&redirect_uri=' + @{${@environment.getProperty('kakao.redirect-uri')}} + '&response_type=code'"
+                               class="btn btn-chat-style btn-block d-flex align-items-center justify-content-center">
+                                <i class="fas fa-comment" aria-hidden="true"></i> <!-- 채팅방 로고 -->
+                                <span>카카오로 로그인</span>
+                            </a>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <span>아직 회원이 아니신가요?</span>
                     <a href="/register" class="ml-2">회원가입</a>
                 </div>
+
             </div>
         </div>
     </div>
