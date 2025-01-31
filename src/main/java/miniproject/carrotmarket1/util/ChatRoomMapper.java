@@ -1,11 +1,8 @@
 package miniproject.carrotmarket1.util;
 
 import miniproject.carrotmarket1.dto.ChatRoomDTO;
-import miniproject.carrotmarket1.dto.ProductDTO;
-import miniproject.carrotmarket1.dto.UserDTO;
 import miniproject.carrotmarket1.entity.ChatRoom;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeMap;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -19,13 +16,12 @@ public class ChatRoomMapper {
     public ChatRoomMapper(ModelMapper modelMapper) {
         this.modelMapper = modelMapper;
 
-        TypeMap<ChatRoom, ChatRoomDTO> chatRoomMap = modelMapper.createTypeMap(ChatRoom.class, ChatRoomDTO.class);
-        chatRoomMap.addMappings(mapper -> {
-            mapper.map(src -> modelMapper.map(src.getProduct(), ProductDTO.class), ChatRoomDTO::setProduct);
-            mapper.map(src -> modelMapper.map(src.getBuyer(), UserDTO.class), ChatRoomDTO::setBuyer);
-            mapper.map(src -> modelMapper.map(src.getSeller(), UserDTO.class), ChatRoomDTO::setSeller);
+        // 커스텀 매핑 설정
+        modelMapper.typeMap(ChatRoom.class, ChatRoomDTO.class).addMappings(mapper -> {
+            mapper.map(ChatRoom::getProduct, ChatRoomDTO::setProduct);
+            mapper.map(ChatRoom::getBuyer, ChatRoomDTO::setBuyer);
+            mapper.map(ChatRoom::getSeller, ChatRoomDTO::setSeller);
         });
-
     }
 
     // Entity -> DTO 변환
