@@ -33,7 +33,7 @@
                             <span class="text-muted" th:text="${session.loggedInUser.location}"></span>
                         </div>
 
-                        <a th:href="@{/logout}" class="btn btn-orange ml-3">로그아웃</a>
+                        <a th:href="@{/userlogout}" class="btn btn-orange ml-3">로그아웃</a>
 
                         <th:block th:if="${session.loggedInUser.userGroup == 'GENERAL'}">
                         <a th:href="@{/chatroom}" class="nav-link d-flex align-items-center ml-3">
@@ -82,10 +82,13 @@
                         <input type="hidden" id="loginLongitude" name="longitude">
                         <input type="hidden" id="loginLocation" name="location">
                         <button type="submit" class="btn btn-orange btn-block"
-                                onclick="event.preventDefault(); getLocationAndSubmit();">로그인
+                                onclick="getLocationAndSubmit();">로그인
                         </button>
                         <div class="text-center my-3">
-                            <a th:href="'https://kauth.kakao.com/oauth/authorize?client_id=' + @{${@environment.getProperty('kakao.restApi.Key')}} + '&redirect_uri=' + @{${@environment.getProperty('kakao.redirect-uri')}} + '&response_type=code'"
+                            <a th:href="'https://kauth.kakao.com/oauth/authorize?client_id='
+                            + @{${@environment.getProperty('kakao.restApi.Key')}} + '&redirect_uri='
+                            + @{${@environment.getProperty('kakao.redirect-uri')}} +
+                                '&response_type=code&prompt=login'"
                                class="btn btn-chat-style btn-block d-flex align-items-center justify-content-center">
                                 <i class="fas fa-comment" aria-hidden="true"></i> <!-- 채팅방 로고 -->
                                 <span>카카오로 로그인</span>
@@ -120,7 +123,10 @@
                     // 위치 정보를 주소로 변환 후 폼 제출
                     convertLatLngToAddress(latitude, longitude, (address) => {
                         document.getElementById('loginLocation').value = address;
-                        document.getElementById('loginForm').submit();
+                        // 강제로 form의 method를 "post"로 설정
+                        const form = document.getElementById('loginForm');
+                        form.method = "post";
+                        form.submit();
                     });
                 }, () => {
                     alert("위치 정보를 가져오는 데 실패했습니다.");

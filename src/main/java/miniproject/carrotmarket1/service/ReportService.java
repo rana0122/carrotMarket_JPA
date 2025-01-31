@@ -16,6 +16,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Service
@@ -36,11 +39,38 @@ public class ReportService {
                                                    String tag,
                                                    String search) {
         Pageable pageable = PageRequest.of(page, size);
+        // 문자열 날짜를 Timestamp로 변환 (null 체크)
+        Timestamp startTimestamp = parseTimestamp(startDate);
+        Timestamp endTimestamp = parseTimestamp(endDate);
+        // String을 ReportStatus Enum으로 변환
+        ReportStatus reportStatus = parseReportStatus(status);
 
-        Page<Report> reportPage = reportRepository.getReportListPagination(
-                startDate, endDate, status, tag, search, pageable);
+        //  Repository 호출 (변환된 값 사용)
+        Page<Report> reportPage =
+                reportRepository.getReportListPagination(startTimestamp, endTimestamp, reportStatus, tag, search, pageable);
 
         return reportPage.map(reportMapper::toDto);
+    }
+
+    // Enum 변환 메서드
+    private ReportStatus parseReportStatus(String status) {
+        if (status == null || status.isEmpty()) {
+            return null;
+        }
+        try {
+            return ReportStatus.valueOf(status.toUpperCase()); // Enum 변환
+        } catch (IllegalArgumentException e) {
+            return null; // 잘못된 값이면 null 반환 (오류 방지)
+        }
+    }
+
+    // 날짜 변환 메서드
+    private Timestamp parseTimestamp(String dateStr) {
+        if (dateStr == null || dateStr.isEmpty()) {
+            return null;
+        }
+        LocalDateTime localDateTime = LocalDateTime.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        return Timestamp.valueOf(localDateTime);
     }
 
     //신고 상세 조회
@@ -55,10 +85,12 @@ public class ReportService {
         if(report != null){
             // 엔티티 메서드 호출로 상태 변경
             report.changeStatus(status);
+            reportRepository.save(report);
         }
         else{
             throw new IllegalArgumentException("신고 ID가 존재하지 않습니다: " + id);
         }
+
     }
     //신고글 숨김 처리 기능
     public void updateProductLock(Long productId, String lockYn) {

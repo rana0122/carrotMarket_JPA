@@ -2,6 +2,7 @@ package miniproject.carrotmarket1.repository;
 
 import miniproject.carrotmarket1.entity.Category;
 import miniproject.carrotmarket1.entity.Report;
+import miniproject.carrotmarket1.entity.ReportStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,16 +27,22 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
             "(:startDate IS NULL OR r.createdAt > :startDate) " +
             "AND (:endDate IS NULL OR r.createdAt < :endDate) " +
             "AND (:status IS NULL OR r.status = :status) " +
-            "AND ((:tag = 'email' AND :search IS NOT NULL AND u.email LIKE %:search%) " +
-            "OR (:tag = 'title' AND :search IS NOT NULL AND p.title LIKE %:search%) " +
-            "OR (:tag = 'name' AND :search IS NOT NULL AND c.name LIKE %:search%))")
+            "AND (" +
+            "(:tag IS NULL OR " +
+            "(:tag = 'email' AND :search IS NOT NULL AND u.email LIKE CONCAT('%', :search, '%')) " +
+            "OR (:tag = 'title' AND :search IS NOT NULL AND p.title LIKE CONCAT('%', :search, '%')) " +
+            "OR (:tag = 'name' AND :search IS NOT NULL AND c.name LIKE CONCAT('%', :search, '%')))" +
+            ")")
     Page<Report> getReportListPagination(
-            @Param("startDate") String startDate,
-            @Param("endDate") String endDate,
-            @Param("status") String status,
+            @Param("startDate") Timestamp startDate,
+            @Param("endDate") Timestamp endDate,
+            @Param("status") ReportStatus status,  // <-- 수정: String → ReportStatus
             @Param("tag") String tag,
             @Param("search") String search,
-            Pageable pageable);
+            Pageable pageable
+    );
+
+
 
     // 신고 목록 필터별 개수
     @Query(value = "SELECT COUNT(r) FROM Report r " +

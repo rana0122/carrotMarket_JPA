@@ -24,7 +24,7 @@ public class ProductDTO {
     private Double longitude;
     private Long categoryId;
     private Timestamp createdAt;
-    private Long userId;
+//    private Long userId;
     private String status;
     private String usedYn;
     private int totalCount;
@@ -34,6 +34,6 @@ public class ProductDTO {
 
     // 관계 매핑
     private UserDTO user;
-    private CategoryDTO categoryDTO;
+    private CategoryDTO category;
     private List<ProductImageDTO> images;
 }

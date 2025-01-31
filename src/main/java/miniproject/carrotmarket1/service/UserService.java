@@ -139,12 +139,12 @@ public class UserService {
         }
 
         // 2. 새 사용자 생성
-        String randomPassword = passwordEncoder.encode("KAKAO_USER"); // 고정값 또는 랜덤값 사용
-//        String randomPassword = UUID.randomUUID().toString();
+        String randomPassword = passwordEncoder.encode(UUID.randomUUID().toString()); // 고정값 또는 랜덤값 사용
         User newUser = User.builder()
                 .username(kakaoUserInfo.getNickname())
                 .email(kakaoUserInfo.getEmail())
 //                .password(randomPassword)
+                .profileImage(kakaoUserInfo.getProfile_image())
                 .userGroup("GENERAL")
                 .lockedYn("N")
                 .build();

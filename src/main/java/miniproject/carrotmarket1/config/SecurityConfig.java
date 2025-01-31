@@ -22,13 +22,15 @@ public class SecurityConfig {
                         .anyRequest().authenticated() // 나머지 요청은 인증 필요
                 )
                 .formLogin(form -> form
-                        .loginPage("/userlogin") // 커스텀 로그인 페이지 설정
+                        .loginPage("/login") // 로그인 페이지를 "/login"으로 변경
+                        //.loginProcessingUrl("/userlogin") // 로그인 요청을 "/userlogin"에서 처리
+                        .failureUrl("/login?error=true") // 로그인 실패 시 이동
                         .permitAll()
                 )
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessUrl("/products")
-                        .permitAll()
+                .logout(logout -> logout.disable()
+//                        .logoutUrl("/userlogout")
+//                        .logoutSuccessUrl("/products")
+//                        .permitAll()
                 );
 
         return http.build();

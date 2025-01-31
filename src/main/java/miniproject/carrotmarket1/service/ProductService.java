@@ -68,6 +68,7 @@ public class ProductService {
         // 3. 현재 시간 설정 및 상품 상태 설정
         product.setCreatedAt(new Timestamp(System.currentTimeMillis()));
         product.setStatus("SALE");
+        product.setUsedYn("Y");
         //dto를 entity로 변환
         Product productEntity = productMapper.toEntity(product);
 

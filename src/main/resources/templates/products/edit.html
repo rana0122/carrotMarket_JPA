@@ -192,7 +192,7 @@
               <option th:each="cat : ${category}"
                       th:value="${cat.id}"
                       th:text="${cat.name}"
-                      th:selected="${product.category.id==cat.id}">
+                      th:selected="${product.categoryId==cat.id}">
               </option>
             </select>
           </div>
