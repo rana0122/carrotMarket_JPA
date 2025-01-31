@@ -13,10 +13,6 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 public class ReportDTO {
     private Long id;
-//    private Long productId;
-//    private Long reporterId;
-//    private Long categoryId;
-//    private Long adminId;
     private String details;
     private ReportStatus status;
     private Timestamp createdAt;
