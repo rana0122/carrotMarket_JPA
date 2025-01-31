@@ -9,9 +9,6 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 public class ChatRoomDTO {
     private Long id;
-//    private Long productId;
-//    private Long buyerId;
-//    private Long sellerId;
     private Timestamp createdAt;
 
     // Product 와 User 객체 관계 매핑

@@ -148,7 +148,7 @@ public class ReportController {
         ProductDTO product = productService.findItemById(id);
         List<CategoryDTO> categories = reportService.getCategoriesByRange(); // 신고 카테고리 조회
         for (CategoryDTO category : categories) {
-            if(category.getId().equals(report.getCategoryId())) {
+            if(category.getId().equals(report.getCategory().getId())) {
                 report.setCategory(category);
             }
         }

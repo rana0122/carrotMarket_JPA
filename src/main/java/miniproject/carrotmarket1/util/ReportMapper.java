@@ -18,15 +18,15 @@ public class ReportMapper {
 
         // 커스텀 매핑 설정
         modelMapper.typeMap(Report.class, ReportDTO.class).addMappings(mapper -> {
-            mapper.map(src -> src.getProduct().getId(), ReportDTO::setProductId);
-            mapper.map(src -> src.getReporter().getId(), ReportDTO::setReporterId);
-            mapper.map(src -> src.getCategory().getId(), ReportDTO::setCategoryId);
+            mapper.map(Report::getProduct, ReportDTO::setProduct);
+            mapper.map(Report::getReporter, ReportDTO::setReporter);
+            mapper.map(Report::getCategory, ReportDTO::setCategory);
             mapper.map(src -> {
                 if (src.getAdmin() != null) {
                     return src.getAdmin().getId();
                 }
                 return null;
-            }, ReportDTO::setAdminId);
+            }, ReportDTO::setAdmin);
         });
     }
 
