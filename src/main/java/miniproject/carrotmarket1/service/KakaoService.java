@@ -6,11 +6,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import miniproject.carrotmarket1.dto.KakaoUserInfoDTO;
+import miniproject.carrotmarket1.dto.UserDTO;
 import miniproject.carrotmarket1.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.RequestEntity;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -28,18 +27,26 @@ public class KakaoService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final RestTemplate restTemplate;
+    private final UserService userService;
+
 
     @Value("${kakao.restApi.Key}")
     private String kakaoKey;
 
-    public KakaoUserInfoDTO kakaoLogin(String code) throws JsonProcessingException {
+    public UserDTO kakaoLogin(String code) throws JsonProcessingException {
         // 1. "인가 코드"로 "액세스 토큰" 요청
         String accessToken = getToken(code);
 
         // 2. 토큰으로 카카오 API 호출 : "액세스 토큰"으로 "카카오 사용자 정보" 가져오기
         KakaoUserInfoDTO kakaoUserInfo = getKakaoUserInfo(accessToken);
 
-        return kakaoUserInfo;
+        // 2. 기존 사용자 확인 또는 새 사용자 생성
+        UserDTO user = userService.findOrCreateKakaoUser(kakaoUserInfo);
+
+        // 3. Access Token을 DTO에 설정
+        user.setKakaoAccessToken(accessToken);
+
+        return user;
     }
 
     private String getToken(String code) throws JsonProcessingException {
@@ -103,17 +110,50 @@ public class KakaoService {
                 String.class
         );
 
+        log.info("response.getBody() = " + response.getBody());
         JsonNode jsonNode = new ObjectMapper().readTree(response.getBody());
         Long id = jsonNode.get("id").asLong();
         String nickname = jsonNode.get("properties")
                 .get("nickname").asText();
         String email = jsonNode.get("kakao_account")
                 .get("email").asText();
+        String profile_image = jsonNode.get("properties")
+                .get("profile_image").asText();
 
-        log.info("카카오 사용자 정보: " + id + ", " + nickname + ", " + email);
-        return new KakaoUserInfoDTO(id, nickname, email);
+        log.info("카카오 사용자 정보: " + id + ", " + nickname + ", " + email+ ", " + profile_image);
+        return new KakaoUserInfoDTO(id, nickname, email, profile_image);
     }
 
+    public void kakaoLogout(String accessToken) {
+        String logoutUrl = "https://kapi.kakao.com/v1/user/logout";
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
 
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(logoutUrl, request, String.class);
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            System.out.println("카카오 로그아웃 성공");
+        } else {
+            System.err.println("카카오 로그아웃 실패: " + response.getStatusCode());
+        }
+    }
+
+    private final String UNLINK_URL = "https://kapi.kakao.com/v1/user/unlink";
+
+    public void unlink(String accessToken) {
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(UNLINK_URL, request, String.class);
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            System.out.println("카카오 연결 해제 완료");
+        } else {
+            System.err.println("카카오 연결 해제 실패: " + response.getStatusCode());
+        }
+    }
 }

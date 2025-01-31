@@ -91,7 +91,7 @@ public class ProductController {
         //로그인 user  정보 조회
         UserDTO loggedInUser = (UserDTO) session.getAttribute("loggedInUser");
         //판매자(게시글소유자) 정보 조회
-        UserDTO user = userService.findById(product.getUserId());
+        UserDTO user = userService.findById(product.getUser().getId());
 
         model.addAttribute("product", product);
         model.addAttribute("user", user);
@@ -116,7 +116,7 @@ public class ProductController {
                                 HttpSession session) throws IOException {
 
         UserDTO loggedInUser = (UserDTO) session.getAttribute("loggedInUser");
-        product.setUserId(loggedInUser.getId());
+        product.setUser(loggedInUser);
 
         // 로그인한 사용자의 위치 정보를 상품에 설정
         product.setLocation(loggedInUser.getLocation());
@@ -135,7 +135,7 @@ public class ProductController {
         ProductDTO product = productService.findItemById(id);
         UserDTO loggedInUser = (UserDTO) session.getAttribute("loggedInUser");
 
-        if (!product.getUserId().equals(loggedInUser.getId())) {
+        if (!product.getUser().getId().equals(loggedInUser.getId())) {
             return "redirect:/products";
         }
 
@@ -157,12 +157,15 @@ public class ProductController {
         ProductDTO existingProduct = productService.findItemById(id);
 
         // 기존 상품이 없거나 로그인한 사용자가 상품 소유자가 아닌 경우
-        if (existingProduct == null || !existingProduct.getUserId().equals(loggedInUser.getId())) {
+        if (existingProduct == null || !existingProduct.getUser().getId().equals(loggedInUser.getId())) {
             return "redirect:/products";
         }
 
         // 기존 상품의 userId를 유지
-        product.setUserId(existingProduct.getUserId());
+        product.setUser(existingProduct.getUser());
+        product.setCreatedAt(existingProduct.getCreatedAt());
+        product.setUsedYn(existingProduct.getUsedYn());
+        product.setStatus(existingProduct.getStatus());
 
         productService.updateProductWithImages(id, product, newImages, deleteImageIds);
         return "redirect:/products/detail/" + id;

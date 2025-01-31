@@ -90,7 +90,7 @@ public class ChatController {
 
         if (chatRoomOptional.isPresent()) {
             ChatRoomDTO chatRoom = chatRoomOptional.get();
-            Long productId = chatRoom.getProductId();
+            Long productId = chatRoom.getProduct().getId();
 
             // 상품 상태 업데이트
             productService.updateReservationStatus(productId, status);
@@ -113,7 +113,7 @@ public class ChatController {
                     // 새로운 trade 레코드 생성
                     TradeDTO newTrade = TradeDTO.builder()
                             .productId(productId)
-                            .buyerId(chatRoom.getBuyerId())
+                            .buyerId(chatRoom.getBuyer().getId())
                             .status(status)
                             .tradeDate(new Timestamp(System.currentTimeMillis()))
                             .build();

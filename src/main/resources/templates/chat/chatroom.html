@@ -175,7 +175,7 @@
   <div id="buy" class="tab-content">
     <div class="chatroom-list" th:if="${not #lists.isEmpty(chatRooms)}">
       <div class="chatroom-item" th:each="chatRoom : ${chatRooms}"
-           th:if="${chatRoom.buyerId == session.loggedInUser.id}">
+           th:if="${chatRoom.buyer.getId() == session.loggedInUser.id}">
         <div class="no-image">
           <div th:if="${not #lists.isEmpty(chatRoom.product.images)}">
             <img th:src="${chatRoom.product.images[0]?.imageUrl}" alt="상품 이미지" />
@@ -207,7 +207,7 @@
   <div id="sell" class="tab-content">
     <div class="chatroom-list" th:if="${not #lists.isEmpty(chatRooms)}">
       <div class="chatroom-item" th:each="chatRoom : ${chatRooms}"
-           th:if="${chatRoom.sellerId == session.loggedInUser.id}">
+           th:if="${chatRoom.seller.getId() == session.loggedInUser.id}">
         <div class="no-image">
           <div th:if="${not #lists.isEmpty(chatRoom.product.images)}">
             <img th:src="${chatRoom.product.images[0]?.imageUrl}" alt="상품 이미지" />

@@ -26,5 +26,5 @@ public class ReportDTO {
     private ProductDTO product;
     private UserDTO reporter;
     private UserDTO admin;
-    private CategoryDTO categoryDTO;
+    private CategoryDTO category;
 }

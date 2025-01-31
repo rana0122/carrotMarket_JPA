@@ -278,12 +278,12 @@
 
                     <div class="d-flex gap-2 mt-3">
                         <!-- 수정 버튼 -->
-                        <div th:if="${loggedInUser != null and loggedInUser.id == product.userId}">
+                        <div th:if="${loggedInUser != null and loggedInUser.id == product.user.getId()}">
                             <a class="btn btn-orange" th:href="@{/products/edit/{id}(id=${product.id})}">수정하기</a>
                         </div>
 
                         <!-- 삭제 버튼 -->
-                        <div th:if="${loggedInUser != null and loggedInUser.id == product.userId}">
+                        <div th:if="${loggedInUser != null and loggedInUser.id == product.user.getId()}">
                             <form th:action="@{/products/delete/{id}(id=${product.id})}" method="post"
                                   onsubmit="return confirm('정말 삭제하시겠습니까?');">
                                 <button type="submit" class="btn btn-orange">삭제</button>

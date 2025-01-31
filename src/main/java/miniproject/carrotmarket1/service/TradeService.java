@@ -27,8 +27,8 @@ public class TradeService {
     }
 
     // 기존 메서드 유지
-    public List<ProductDTO> findByBuyerId(Long buyerId) {
-        return productMapper.toDtoList(tradeRepository.findByBuyerId(buyerId));
+    public List<ProductDTO> findProductsByBuyerId(Long buyerId) {
+        return productMapper.toDtoList(tradeRepository.findProductsByBuyerId(buyerId));
     }
 
     // 새로운 메서드 추가

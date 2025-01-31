@@ -2,7 +2,9 @@ package miniproject.carrotmarket1.controller;
 
 import lombok.RequiredArgsConstructor;
 import miniproject.carrotmarket1.dto.*;
+import miniproject.carrotmarket1.entity.Category;
 import miniproject.carrotmarket1.entity.ReportStatus;
+import miniproject.carrotmarket1.service.CategoryService;
 import miniproject.carrotmarket1.service.ProductService;
 import miniproject.carrotmarket1.service.ReportService;
 import org.springframework.data.domain.Page;
@@ -34,7 +36,7 @@ public class ReportController {
         Page<ReportDTO> reports = reportService.getReportListPagination(startDate, endDate, status,
                 page, size, tag, search);
         model.addAttribute("reports", reports); // 보고서 데이터
-        model.addAttribute("page", reports); // 페이지 정보
+        model.addAttribute("page",reports); // 페이지 정보
         //<select>에 매핑할 ReportStatus(Enum) 상수 값 전달
         model.addAttribute("statusList", ReportStatus.values());
 
@@ -144,6 +146,12 @@ public class ReportController {
     public String insertReport(@PathVariable("id") Long id, @ModelAttribute ReportDTO report,
                                @SessionAttribute("loggedInUser") UserDTO loggedInUser) {
         ProductDTO product = productService.findItemById(id);
+        List<CategoryDTO> categories = reportService.getCategoriesByRange(); // 신고 카테고리 조회
+        for (CategoryDTO category : categories) {
+            if(category.getId().equals(report.getCategoryId())) {
+                report.setCategory(category);
+            }
+        }
         report.setProduct(product);
         report.setReporter(loggedInUser);
         report.setStatus(ReportStatus.PENDING); // 초기 상태 설정

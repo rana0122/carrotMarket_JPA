@@ -40,7 +40,7 @@ public class TradeController {
     @GetMapping("/buy/{userId}")
     public String showBuyProduct(@PathVariable Long userId, Model model, HttpSession session) {
         UserDTO loggedInUser = (UserDTO) session.getAttribute("loggedInUser");
-        List<ProductDTO> products = tradeService.findByBuyerId(userId); //구매물품 내역 조회
+        List<ProductDTO> products = tradeService.findProductsByBuyerId(userId); //구매물품 내역 조회
         model.addAttribute("products", products);
         model.addAttribute("user", loggedInUser);
         return "products/myproduct";
